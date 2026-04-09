@@ -1619,6 +1619,108 @@ def edit_option(request, option_id):
     option.save()
     return Response({'message': 'Option updated.'}, status=200)
 
+# ============================================================
+# ASSIGNMENTS
+# ============================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_assignments(request):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+
+    assignments = Assignments.objects.all().select_related('course', 'created_by')
+    data = [{
+        'id':              a.id,
+        'course_id':       a.course.id,
+        'course_title':    a.course.title,
+        'assignment_type': a.assignment_type,
+        'target_value':    a.target_value,
+        'mandatory':       a.mandatory,
+        'due_at':          a.due_at,
+        'created_at':      a.created_at,
+    } for a in assignments]
+    return Response(data, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_assignment(request):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+
+    course_id       = request.data.get('course_id')
+    assignment_type = request.data.get('assignment_type', 'all')
+    target_value    = request.data.get('target_value', '')
+    mandatory       = request.data.get('mandatory', True)
+    due_at          = request.data.get('due_at')
+
+    try:
+        course = Courses.objects.get(id=course_id)
+    except Courses.DoesNotExist:
+        return Response({'error': 'Course not found.'}, status=404)
+
+    # Check for duplicate
+    existing = Assignments.objects.filter(
+        course=course,
+        assignment_type=assignment_type,
+        target_value=target_value
+    ).exists()
+    if existing:
+        return Response({'error': 'This assignment already exists.'}, status=400)
+
+    assignment = Assignments.objects.create(
+        course           = course,
+        assignment_type  = assignment_type,
+        target_value     = target_value if assignment_type == 'role' else '',
+        mandatory        = mandatory,
+        due_at           = due_at,
+        created_by       = academy_user,
+        created_at       = timezone.now(),
+        updated_at       = timezone.now(),
+    )
+
+    # Auto-enrol existing users who match this assignment
+    if assignment_type == 'all':
+        users = Users.objects.filter(status='active')
+    else:
+        users = Users.objects.filter(role=target_value, status='active')
+
+    for user in users:
+        already_enrolled = Enrolments.objects.filter(user=user, course=course).exists()
+        if not already_enrolled:
+            Enrolments.objects.create(
+                user       = user,
+                course     = course,
+                source     = 'assignment',
+                status     = 'not_started',
+                created_at = timezone.now(),
+                updated_at = timezone.now(),
+            )
+
+    return Response({
+        'message':    f'Course assigned successfully.',
+        'assignment': {
+            'id':              assignment.id,
+            'course_title':    course.title,
+            'assignment_type': assignment_type,
+            'target_value':    target_value,
+            'mandatory':       mandatory,
+        }
+    }, status=201)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_assignment(request, assignment_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+
+    assignment = get_object_or_404(Assignments, id=assignment_id)
+    assignment.delete()
+    return Response({'message': 'Assignment deleted.'}, status=200)
 
 # ============================================================
 # CERTIFICATE GENERATION

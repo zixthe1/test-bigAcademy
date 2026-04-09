@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 
+const QUICK_LOGINS = [
+  { label: 'HR',           email: 'sarah.admin@bigchildcare.com.au',  password: 'Test1234!', color: 'danger' },
+  { label: 'Admin',        email: 'priya.manager@bigchildcare.com.au', password: 'Test1234!', color: 'primary' },
+  { label: 'Area Manager', email: 'alex.areamanager@bigchildcare.com.au', password: 'Test1234!', color: 'warning' },
+  { label: 'Educator',     email: 'amy.educator@bigchildcare.com.au',  password: 'Test1234!', color: 'success' },
+  { label: 'Educator 2',   email: 'jake.morris@bigchildcare.com.au',   password: 'Test1234!', color: 'success' },
+];
+
 export default function Login() {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -10,26 +18,26 @@ export default function Login() {
   const [loading, setLoading]   = useState(false);
 
   const { login, getRedirectPath } = useAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const res = await API.post('/auth/login/', { email, password });
       login(res.data.user, res.data.token);
-
-      // Redirect based on role using central mapping
-      const role = res.data.user.role;
-      navigate(getRedirectPath(role));
-
+      navigate(getRedirectPath(res.data.user.role));
     } catch (err) {
       setError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickLogin = (account) => {
+    setEmail(account.email);
+    setPassword(account.password);
   };
 
   return (
@@ -41,9 +49,28 @@ export default function Login() {
           <p className="text-muted">Sign in to your account</p>
         </div>
 
-        {error && (
-          <div className="alert alert-danger py-2">{error}</div>
-        )}
+        {/* Quick Login — Demo Only */}
+        <div className="mb-4">
+          <p className="text-muted small text-center mb-2">
+            🔧 <strong>Demo Quick Login</strong>
+          </p>
+          <div className="d-flex flex-wrap gap-2 justify-content-center">
+            {QUICK_LOGINS.map(account => (
+              <button
+                key={account.email}
+                type="button"
+                className={`btn btn-outline-${account.color} btn-sm`}
+                onClick={() => handleQuickLogin(account)}
+              >
+                {account.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <hr className="mb-4" />
+
+        {error && <div className="alert alert-danger py-2">{error}</div>}
 
         <form onSubmit={handleLogin}>
           <div className="mb-3">
@@ -53,11 +80,10 @@ export default function Login() {
               className="form-control"
               placeholder="you@bigchildcare.com.au"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
             />
           </div>
-
           <div className="mb-4">
             <label className="form-label fw-semibold">Password</label>
             <input
@@ -65,16 +91,11 @@ export default function Login() {
               className="form-control"
               placeholder="Enter your password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
             />
           </div>
-
-          <button
-            type="submit"
-            className="btn btn-success w-100"
-            disabled={loading}
-          >
+          <button type="submit" className="btn btn-success w-100" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>

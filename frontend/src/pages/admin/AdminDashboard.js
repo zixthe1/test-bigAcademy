@@ -7,6 +7,7 @@ import AdminStaff from './AdminStaff';
 import AdminReports from './AdminReports';
 import AdminQuizGrading from './AdminQuizGrading';
 import AdminUnlockRequests from './AdminUnlockRequests';
+import AdminAssignments from './AdminAssignments';
 import NotificationBell from '../../components/NotificationBell';
 
 export default function AdminDashboard() {
@@ -47,11 +48,21 @@ export default function AdminDashboard() {
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
             <button className={`nav-link ${activeTab === 'courses' ? 'active' : ''}`}
-              onClick={() => setActiveTab('courses')}>Courses</button>
+              onClick={() => setActiveTab('courses')}>
+              Courses
+            </button>
           </li>
           <li className="nav-item">
             <button className={`nav-link ${activeTab === 'staff' ? 'active' : ''}`}
-              onClick={() => setActiveTab('staff')}>Staff</button>
+              onClick={() => setActiveTab('staff')}>
+              Staff
+            </button>
+          </li>
+          <li className="nav-item">
+            <button className={`nav-link ${activeTab === 'assignments' ? 'active' : ''}`}
+              onClick={() => setActiveTab('assignments')}>
+              📋 Assignments
+            </button>
           </li>
           <li className="nav-item">
             <button className={`nav-link ${activeTab === 'grading' ? 'active' : ''}`}
@@ -69,15 +80,18 @@ export default function AdminDashboard() {
           </li>
           <li className="nav-item">
             <button className={`nav-link ${activeTab === 'reports' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reports')}>Reports</button>
+              onClick={() => setActiveTab('reports')}>
+              Reports
+            </button>
           </li>
         </ul>
 
-        {activeTab === 'courses' && <AdminCourses />}
-        {activeTab === 'staff'   && <AdminStaff />}
-        {activeTab === 'grading' && <AdminQuizGrading />}
-        {activeTab === 'unlocks' && <AdminUnlockRequests />}
-        {activeTab === 'reports' && <AdminReports />}
+        {activeTab === 'courses'     && <AdminCourses />}
+        {activeTab === 'staff'       && <AdminStaff />}
+        {activeTab === 'assignments' && <AdminAssignments />}
+        {activeTab === 'grading'     && <AdminQuizGrading />}
+        {activeTab === 'unlocks'     && <AdminUnlockRequests />}
+        {activeTab === 'reports'     && <AdminReports />}
       </div>
     </div>
   );

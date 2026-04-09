@@ -70,6 +70,11 @@ urlpatterns = [
     path('notifications/',            views.my_notifications,        name='get-notifications'),
     path('notifications/mark-read/',  views.mark_notifications_read, name='mark-notifications-read'),
     
+    # ASSIGNMENTS
+    path('assignments/',                        views.list_assignments,   name='list-assignments'),
+    path('assignments/create/',                 views.create_assignment,  name='create-assignment'),
+    path('assignments/<int:assignment_id>/delete/', views.delete_assignment, name='delete-assignment'),
+
     # REPORTS
     path('reports/completion/', views.report_completion, name='report-completion'),
     path('reports/staff/',      views.report_staff,      name='report-staff'),
