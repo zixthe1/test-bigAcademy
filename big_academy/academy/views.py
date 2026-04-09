@@ -1486,6 +1486,139 @@ def quiz_last_attempt_answers(request, quiz_id):
     }, status=200)
 
 
+# ============================================================
+# DELETE ENDPOINTS — Module, Lesson, Quiz, Question, Option
+# ============================================================
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_module(request, module_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    module = get_object_or_404(CourseModules, id=module_id)
+    module.delete()
+    return Response({'message': 'Module deleted.'}, status=200)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_lesson(request, lesson_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    lesson = get_object_or_404(Lessons, id=lesson_id)
+    lesson.delete()
+    return Response({'message': 'Lesson deleted.'}, status=200)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_quiz(request, quiz_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    quiz = get_object_or_404(Quizzes, id=quiz_id)
+    quiz.delete()
+    return Response({'message': 'Quiz deleted.'}, status=200)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_question(request, question_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    question = get_object_or_404(QuizQuestions, id=question_id)
+    question.delete()
+    return Response({'message': 'Question deleted.'}, status=200)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_option(request, option_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    option = get_object_or_404(QuizOptions, id=option_id)
+    option.delete()
+    return Response({'message': 'Option deleted.'}, status=200)
+
+
+# ============================================================
+# EDIT ENDPOINTS — Module, Lesson, Quiz, Question, Option
+# ============================================================
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def edit_module(request, module_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    module = get_object_or_404(CourseModules, id=module_id)
+    module.title = request.data.get('title', module.title)
+    module.sort_order = request.data.get('sort_order', module.sort_order)
+    module.updated_at = timezone.now()
+    module.save()
+    return Response({'message': 'Module updated.'}, status=200)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def edit_lesson(request, lesson_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    lesson = get_object_or_404(Lessons, id=lesson_id)
+    lesson.title            = request.data.get('title', lesson.title)
+    lesson.content_type     = request.data.get('content_type', lesson.content_type)
+    lesson.content_url      = request.data.get('content_url', lesson.content_url)
+    lesson.duration_seconds = request.data.get('duration_seconds', lesson.duration_seconds)
+    lesson.sort_order       = request.data.get('sort_order', lesson.sort_order)
+    lesson.updated_at       = timezone.now()
+    lesson.save()
+    return Response({'message': 'Lesson updated.'}, status=200)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def edit_quiz(request, quiz_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    quiz = get_object_or_404(Quizzes, id=quiz_id)
+    quiz.title             = request.data.get('title', quiz.title)
+    quiz.pass_mark_percent = request.data.get('pass_mark_percent', quiz.pass_mark_percent)
+    quiz.attempt_limit     = request.data.get('attempt_limit', quiz.attempt_limit)
+    quiz.updated_at        = timezone.now()
+    quiz.save()
+    return Response({'message': 'Quiz updated.'}, status=200)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def edit_question(request, question_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    question = get_object_or_404(QuizQuestions, id=question_id)
+    question.question_text = request.data.get('question_text', question.question_text)
+    question.question_type = request.data.get('question_type', question.question_type)
+    question.updated_at    = timezone.now()
+    question.save()
+    return Response({'message': 'Question updated.'}, status=200)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def edit_option(request, option_id):
+    academy_user = get_academy_user(request)
+    if not academy_user or academy_user.role not in CONTENT_ROLES:
+        return Response({'error': 'Access denied.'}, status=403)
+    option = get_object_or_404(QuizOptions, id=option_id)
+    option.option_text = request.data.get('option_text', option.option_text)
+    option.is_correct  = request.data.get('is_correct', option.is_correct)
+    option.save()
+    return Response({'message': 'Option updated.'}, status=200)
+
 
 # ============================================================
 # CERTIFICATE GENERATION

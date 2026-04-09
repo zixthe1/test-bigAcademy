@@ -52,7 +52,20 @@ urlpatterns = [
     path('attempts/pending-grading/', views.pending_short_answer_attempts, name='pending-grading'),
     path('attempts/<int:attempt_id>/grade/', views.grade_short_answer_attempt, name='grade-attempt'),
     
+    # DELETE ENDPOINTS
+    path('modules/<int:module_id>/delete/',     views.delete_module,   name='delete-module'),
+    path('lessons/<int:lesson_id>/delete/',     views.delete_lesson,   name='delete-lesson'),
+    path('quizzes/<int:quiz_id>/delete/',       views.delete_quiz,     name='delete-quiz'),
+    path('questions/<int:question_id>/delete/', views.delete_question, name='delete-question'),
+    path('options/<int:option_id>/delete/',     views.delete_option,   name='delete-option'),
     
+    # EDIT ENDPOINTS
+    path('modules/<int:module_id>/edit/',     views.edit_module,   name='edit-module'),
+    path('lessons/<int:lesson_id>/edit/',     views.edit_lesson,   name='edit-lesson'),
+    path('quizzes/<int:quiz_id>/edit/',       views.edit_quiz,     name='edit-quiz'),
+    path('questions/<int:question_id>/edit/', views.edit_question, name='edit-question'),
+    path('options/<int:option_id>/edit/',     views.edit_option,   name='edit-option'),
+
     # NOTIFICATIONS
     path('notifications/',            views.my_notifications,        name='get-notifications'),
     path('notifications/mark-read/',  views.mark_notifications_read, name='mark-notifications-read'),

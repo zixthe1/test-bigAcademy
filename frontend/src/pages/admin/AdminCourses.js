@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
+import AdminCourseBuilder from './AdminCourseBuilder';
 
 export default function AdminCourses() {
-  const [courses, setCourses]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [showForm, setShowForm]   = useState(false);
-  const [editing, setEditing]     = useState(null);
-  const [message, setMessage]     = useState('');
-  const [form, setForm]           = useState({
+  const [courses, setCourses]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [showForm, setShowForm]       = useState(false);
+  const [editing, setEditing]         = useState(null);
+  const [message, setMessage]         = useState('');
+  const [managingCourse, setManagingCourse] = useState(null);
+  const [form, setForm]               = useState({
     title: '', description: '', version: '1.0',
     estimated_minutes: '', expiry_months: ''
   });
@@ -66,21 +68,31 @@ export default function AdminCourses() {
   };
 
   const handlePublishToggle = async (course) => {
-  const newStatus = course.status === 'published' ? 'draft' : 'published';
-  try {
-    await API.patch(`/courses/${course.id}/`, { status: newStatus });
-    setMessage(`Course ${newStatus === 'published' ? 'published' : 'unpublished'} successfully.`);
-    fetchCourses();
-  } catch (err) {
-    setMessage('Could not update course status.');
-  }
-};
+    const newStatus = course.status === 'published' ? 'draft' : 'published';
+    try {
+      await API.patch(`/courses/${course.id}/`, { status: newStatus });
+      setMessage(`Course ${newStatus === 'published' ? 'published' : 'unpublished'} successfully.`);
+      fetchCourses();
+    } catch (err) {
+      setMessage('Could not update course status.');
+    }
+  };
 
   const statusBadge = (status) => {
     if (status === 'published') return <span className="badge bg-success">Published</span>;
     if (status === 'draft')     return <span className="badge bg-warning text-dark">Draft</span>;
     return <span className="badge bg-secondary">Archived</span>;
   };
+
+  // Show course builder if managing a course
+  if (managingCourse) {
+    return (
+      <AdminCourseBuilder
+        course={managingCourse}
+        onBack={() => { setManagingCourse(null); fetchCourses(); }}
+      />
+    );
+  }
 
   if (loading) return <p>Loading courses...</p>;
 
@@ -90,7 +102,9 @@ export default function AdminCourses() {
         <h4>Courses</h4>
         <button
           className="btn btn-primary btn-sm"
-          onClick={() => { setShowForm(!showForm); setEditing(null);
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditing(null);
             setForm({ title: '', description: '', version: '1.0', estimated_minutes: '', expiry_months: '' });
           }}
         >
@@ -163,6 +177,10 @@ export default function AdminCourses() {
                 <td>{course.estimated_minutes ? `${course.estimated_minutes} mins` : '—'}</td>
                 <td>{course.expiry_months ? `${course.expiry_months} months` : 'No expiry'}</td>
                 <td>
+                  <button className="btn btn-outline-secondary btn-sm me-2"
+                    onClick={() => setManagingCourse(course)}>
+                    📦 Manage Content
+                  </button>
                   <button className="btn btn-outline-primary btn-sm me-2"
                     onClick={() => handleEdit(course)}>
                     Edit
