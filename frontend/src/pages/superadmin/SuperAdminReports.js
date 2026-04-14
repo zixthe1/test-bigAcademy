@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
+import { BarChart2, BookOpen, Users, AlertTriangle } from 'lucide-react';
 
 export default function SuperAdminReports() {
   const [completionData, setCompletionData] = useState([]);
@@ -16,8 +17,6 @@ export default function SuperAdminReports() {
     ]).then(([comp, staff]) => {
       setCompletionData(comp.data);
       setStaffData(staff.data);
-
-      // Extract unique locations from staff
       const locs = [...new Set(staff.data.map(s => s.location).filter(Boolean))];
       setLocations(locs);
     }).catch(err => console.error(err))
@@ -28,58 +27,82 @@ export default function SuperAdminReports() {
     ? staffData
     : staffData.filter(s => s.location === filterLocation);
 
-  if (loading) return <p>Loading reports...</p>;
+  const S = {
+    title: { fontSize: '1.1rem', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' },
+    toggleRow: { display: 'flex', gap: '8px', marginBottom: '20px' },
+    toggleBtn: (isActive) => ({
+      padding: '8px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '600',
+      cursor: 'pointer', border: 'none', transition: 'all 0.15s',
+      background: isActive ? '#2563eb' : '#f1f5f9',
+      color:      isActive ? '#fff'     : '#64748b',
+    }),
+    filterRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
+    filterText: { fontSize: '0.85rem', color: '#64748b' },
+    select:    { padding: '7px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#334155', outline: 'none', background: '#fff', cursor: 'pointer' },
+    table:     { width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' },
+    th:        { padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' },
+    td:        { padding: '13px 16px', fontSize: '0.875rem', color: '#334155', borderBottom: '1px solid #f8fafc' },
+    nameTd:    { fontWeight: '600', color: '#0f172a' },
+    badge: (type) => {
+      const config = {
+        success: { bg: '#f0fdf4', color: '#059669', border: '#bbf7d0' },
+        warning: { bg: '#fefce8', color: '#d97706', border: '#fde68a' },
+        neutral: { bg: '#f8fafc', color: '#64748b', border: '#e2e8f0' },
+      };
+      const c = config[type] || config.neutral;
+      return { fontSize: '0.78rem', fontWeight: '700', padding: '3px 10px', borderRadius: '20px', background: c.bg, color: c.color, border: `1px solid ${c.border}` };
+    },
+    progressBar:  { height: '6px', background: '#e2e8f0', borderRadius: '10px', overflow: 'hidden', flex: 1 },
+    progressFill: (pct) => ({ height: '100%', width: `${pct}%`, background: pct >= 80 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444', borderRadius: '10px' }),
+    progressRow:  { display: 'flex', alignItems: 'center', gap: '10px' },
+    progressPct:  { fontSize: '0.78rem', fontWeight: '700', color: '#64748b', minWidth: '36px', textAlign: 'right' },
+    flagBadge:    { display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca' },
+  };
+
+  if (loading) return <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Loading reports...</p>;
 
   return (
     <div>
-      <h4 className="mb-3">Reports</h4>
+      <div style={S.title}>
+        <BarChart2 size={18} color="#2563eb" />
+        Reports
+      </div>
 
-      <div className="btn-group mb-4">
-        <button
-          className={`btn btn-sm ${activeReport === 'completion' ? 'btn-warning' : 'btn-outline-warning'}`}
-          onClick={() => setActiveReport('completion')}
-        >
+      <div style={S.toggleRow}>
+        <button style={S.toggleBtn(activeReport === 'completion')} onClick={() => setActiveReport('completion')}>
+          <BookOpen size={13} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
           Course Completion
         </button>
-        <button
-          className={`btn btn-sm ${activeReport === 'staff' ? 'btn-warning' : 'btn-outline-warning'}`}
-          onClick={() => setActiveReport('staff')}
-        >
+        <button style={S.toggleBtn(activeReport === 'staff')} onClick={() => setActiveReport('staff')}>
+          <Users size={13} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
           Staff Progress
         </button>
       </div>
 
-      {/* Course Completion */}
       {activeReport === 'completion' && (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table-light">
+        <div style={{ overflowX: 'auto' }}>
+          <table style={S.table}>
+            <thead>
               <tr>
-                <th>Course</th>
-                <th>Total Enrolled</th>
-                <th>Completed</th>
-                <th>In Progress</th>
-                <th>Not Started</th>
-                <th>Completion Rate</th>
+                {['Course', 'Total Enrolled', 'Completed', 'In Progress', 'Not Started', 'Completion Rate'].map(h => (
+                  <th key={h} style={S.th}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {completionData.map(course => (
                 <tr key={course.course_id}>
-                  <td className="fw-semibold">{course.course_title}</td>
-                  <td>{course.total}</td>
-                  <td><span className="badge bg-success">{course.completed}</span></td>
-                  <td><span className="badge bg-warning text-dark">{course.in_progress}</span></td>
-                  <td><span className="badge bg-secondary">{course.not_started}</span></td>
-                  <td>
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="progress flex-grow-1" style={{ height: '8px' }}>
-                        <div
-                          className="progress-bar bg-warning"
-                          style={{ width: `${course.completion_rate}%` }}
-                        />
+                  <td style={{ ...S.td, ...S.nameTd }}>{course.course_title}</td>
+                  <td style={S.td}>{course.total}</td>
+                  <td style={S.td}><span style={S.badge('success')}>{course.completed}</span></td>
+                  <td style={S.td}><span style={S.badge('warning')}>{course.in_progress}</span></td>
+                  <td style={S.td}><span style={S.badge('neutral')}>{course.not_started}</span></td>
+                  <td style={S.td}>
+                    <div style={S.progressRow}>
+                      <div style={S.progressBar}>
+                        <div style={S.progressFill(course.completion_rate)} />
                       </div>
-                      <small>{course.completion_rate}%</small>
+                      <span style={S.progressPct}>{course.completion_rate}%</span>
                     </div>
                   </td>
                 </tr>
@@ -89,16 +112,11 @@ export default function SuperAdminReports() {
         </div>
       )}
 
-      {/* Staff Progress */}
       {activeReport === 'staff' && (
         <>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <span className="text-muted">Showing staff across your assigned locations</span>
-            <select
-              className="form-select w-auto"
-              value={filterLocation}
-              onChange={e => setFilter(e.target.value)}
-            >
+          <div style={S.filterRow}>
+            <span style={S.filterText}>Showing staff across your assigned locations</span>
+            <select style={S.select} value={filterLocation} onChange={e => setFilter(e.target.value)}>
               <option value="all">All Locations</option>
               {locations.map(loc => (
                 <option key={loc} value={loc}>{loc}</option>
@@ -106,29 +124,30 @@ export default function SuperAdminReports() {
             </select>
           </div>
 
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={S.table}>
+              <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Location</th>
-                  <th>Completed</th>
-                  <th>In Progress</th>
-                  <th>Not Started</th>
-                  <th>Flags</th>
+                  {['Name', 'Location', 'Completed', 'In Progress', 'Not Started', 'Flags'].map(h => (
+                    <th key={h} style={S.th}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredStaff.map(staff => (
                   <tr key={staff.user_id}>
-                    <td className="fw-semibold">{staff.name}</td>
-                    <td>{staff.location}</td>
-                    <td><span className="badge bg-success">{staff.completed}</span></td>
-                    <td><span className="badge bg-warning text-dark">{staff.in_progress}</span></td>
-                    <td><span className="badge bg-secondary">{staff.not_started}</span></td>
-                    <td>
-                      {staff.has_locked_quiz && (
-                        <span className="badge bg-danger">⚠️ Quiz Locked</span>
+                    <td style={{ ...S.td, ...S.nameTd }}>{staff.name}</td>
+                    <td style={{ ...S.td, color: '#64748b' }}>{staff.location}</td>
+                    <td style={S.td}><span style={S.badge('success')}>{staff.completed}</span></td>
+                    <td style={S.td}><span style={S.badge('warning')}>{staff.in_progress}</span></td>
+                    <td style={S.td}><span style={S.badge('neutral')}>{staff.not_started}</span></td>
+                    <td style={S.td}>
+                      {staff.has_locked_quiz ? (
+                        <span style={S.flagBadge}>
+                          <AlertTriangle size={11} /> Quiz Locked
+                        </span>
+                      ) : (
+                        <span style={{ color: '#cbd5e1' }}>—</span>
                       )}
                     </td>
                   </tr>

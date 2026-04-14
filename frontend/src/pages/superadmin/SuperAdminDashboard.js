@@ -1,3 +1,6 @@
+import CoursesManager from '../shared/CoursesManager';
+import AssignmentsManager from '../shared/AssignmentsManager';
+import AdminQuizGrading from '../admin/AdminQuizGrading';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -271,9 +274,9 @@ export default function AreaManagerDashboard() {
 
         <div style={S.content}>
           {activeItem?.key === 'dashboard'   && <HomeDashboard />}
-          {activeItem?.key === 'courses'     && <SuperAdminStaff />}
-          {activeItem?.key === 'assignments' && <SuperAdminStaff />}
-          {activeItem?.key === 'grading'     && <SuperAdminStaff />}
+          {activeItem?.key === 'courses'     && <CoursesManager accentColor="#2563eb" />}
+          {activeItem?.key === 'assignments' && <AssignmentsManager accentColor="#2563eb" />}
+          {activeItem?.key === 'grading'     && <AdminQuizGrading />}
           {activeItem?.key === 'requests'    && <SuperAdminUnlockRequests />}
           {activeItem?.key === 'staff'       && <SuperAdminStaff />}
           {activeItem?.key === 'reports'     && <SuperAdminReports />}

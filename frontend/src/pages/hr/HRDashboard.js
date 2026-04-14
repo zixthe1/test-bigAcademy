@@ -1,5 +1,5 @@
-import HRCourses from './HRCourses';
-import HRAssignments from './HRAssignments';
+import CoursesManager from '../shared/CoursesManager';
+import AssignmentsManager from '../shared/AssignmentsManager';
 import logo from '../../BigChildcare-Logo.png';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -394,8 +394,8 @@ export default function HRDashboard() {
 
         <div style={S.content}>
           {activeItem?.key === 'dashboard'    && <HomeDashboard />}
-          {activeItem?.key === 'courses'     && <HRCourses />}
-          {activeItem?.key === 'assignments' && <HRAssignments />}
+          {activeItem?.key === 'courses'     && <CoursesManager accentColor="#1a1f8c" />}
+          {activeItem?.key === 'assignments' && <AssignmentsManager accentColor="#1a1f8c" />}  
           {activeItem?.key === 'users'        && <HRManageUsers isExecutive={isExecutive} />}
           {activeItem?.key === 'requests'     && <HRUnlockRequests />}
           {activeItem?.key === 'reports'      && <HRReports />}

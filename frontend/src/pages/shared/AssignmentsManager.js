@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
 import { ClipboardList, Plus, X, Trash2, Calendar } from 'lucide-react';
 
-export default function HRAssignments() {
+export default function AssignmentsManager({ accentColor = '#1a1f8c' }) {
   const [assignments, setAssignments] = useState([]);
   const [courses, setCourses]         = useState([]);
   const [staff, setStaff]             = useState([]);
@@ -73,7 +73,7 @@ export default function HRAssignments() {
       display: 'flex', alignItems: 'center', gap: '6px',
       padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '600',
       cursor: 'pointer', border: 'none',
-      background: isOpen ? '#f1f5f9' : '#1a1f8c',
+      background: isOpen ? '#f1f5f9' : accentColor,
       color: isOpen ? '#64748b' : '#fff',
     }),
     message: (type) => ({
@@ -92,9 +92,8 @@ export default function HRAssignments() {
     formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
     label:     { fontSize: '0.78rem', fontWeight: '600', color: '#374151' },
     input:     { padding: '9px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#1e293b', outline: 'none', fontFamily: 'inherit' },
-    select:    { padding: '9px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#1e293b', outline: 'none', fontFamily: 'inherit', background: '#fff' },
-    checkRow:  { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' },
-    submitBtn: { padding: '9px 20px', background: '#1a1f8c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' },
+    select:    { padding: '9px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', fontSize: '0.875rem', color: '#1e293b', outline: 'none', fontFamily: 'inherit', background: '#fff', width: '100%', appearance: 'auto', cursor:'pointer' },
+    submitBtn: { padding: '9px 20px', background: accentColor, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' },
     table:     { width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' },
     th:        { padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' },
     td:        { padding: '13px 16px', fontSize: '0.875rem', color: '#334155', borderBottom: '1px solid #f8fafc' },
@@ -125,7 +124,7 @@ export default function HRAssignments() {
   return (
     <div>
       <div style={S.header}>
-        <div style={S.title}><ClipboardList size={18} color="#1a1f8c" /> Course Assignments</div>
+        <div style={S.title}><ClipboardList size={18} color={accentColor} /> Course Assignments</div>
         <button style={S.newBtn(showForm)} onClick={() => setShowForm(!showForm)}>
           {showForm ? <><X size={14} /> Cancel</> : <><Plus size={14} /> New Assignment</>}
         </button>
@@ -177,7 +176,7 @@ export default function HRAssignments() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', color: '#374151', fontWeight: '500' }}>
                   <input type="checkbox" checked={form.mandatory}
                     onChange={e => setForm({ ...form, mandatory: e.target.checked })}
-                    style={{ width: '16px', height: '16px', accentColor: '#1a1f8c' }} />
+                    style={{ width: '16px', height: '16px', accentColor }} />
                   Mandatory
                 </label>
               </div>
