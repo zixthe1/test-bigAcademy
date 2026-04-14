@@ -66,7 +66,7 @@ export default function HRDashboard() {
     sidebar: {
       width: sidebarOpen ? '240px' : '68px',
       minHeight: '100vh',
-      background: 'linear-gradient(180deg, #0a0d4a 0%, #1a1f8c 100%)',
+      background: 'linear-gradient(180deg, #0a0d4a 0%, #21289c 100%)',
       display: 'flex',
       flexDirection: 'column',
       transition: 'width 0.25s ease',
@@ -75,12 +75,13 @@ export default function HRDashboard() {
       boxShadow: '3px 0 16px rgba(10,13,74,0.2)',
     },
     sidebarHeader: {
-      padding: '0 16px',
+      padding: '0 12px',
       height: '64px',
       borderBottom: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
+      gap: '8px',
+      
     },
     logoBox: {
       width: '34px',
@@ -324,13 +325,15 @@ export default function HRDashboard() {
       {/* Sidebar */}
       <div style={S.sidebar}>
         <div style={S.sidebarHeader}>
-          <img src={logo} alt="Big Childcare" style={{ width: '48px', height: '44px', objectFit: 'contain' }} />
-          {sidebarOpen && (
-            <div style={{ overflow: 'hidden' }}>
-              <div style={S.logoText}>Big Academy</div>
-              <div style={S.logoSub}>LMS Portal</div>
-            </div>
-          )}
+          {sidebarOpen ? (
+            <>
+              <img src={logo} alt="Big Childcare" style={{ width: '48px', height: '44px', objectFit: 'contain', flexShrink: 0 }} />
+              <div style={{ overflow: 'hidden', flex: 1 }}>
+                <div style={S.logoText}>Big Academy</div>
+                <div style={S.logoSub}>LMS Portal</div>
+              </div>
+            </>
+          ) : null}
           <button style={S.toggleBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>

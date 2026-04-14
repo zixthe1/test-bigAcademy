@@ -75,12 +75,13 @@ export default function EducatorDashboard() {
       boxShadow: '3px 0 16px rgba(10,13,74,0.18)',
     },
     sidebarHeader: {
-      padding: '0 16px',
+      padding: '0 12px',
       height: '64px',
       borderBottom: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
+      gap: '8px',
+      justifyContent: sidebarOpen ? 'flex-start' : 'center',
     },
     logoBox: {
       width: '34px',
@@ -379,13 +380,15 @@ export default function EducatorDashboard() {
       {/* Sidebar */}
       <div style={S.sidebar}>
         <div style={S.sidebarHeader}>
-          <img src={logo} alt="Big Childcare" style={{ width: '48px', height: '44px', objectFit: 'contain' }} />
-          {sidebarOpen && (
-            <div style={{ overflow: 'hidden' }}>
-              <div style={S.logoText}>Big Academy</div>
-              <div style={S.logoSub}>LMS Portal</div>
-            </div>
-          )}
+          {sidebarOpen ? (
+            <>
+              <img src={logo} alt="Big Childcare" style={{ width: '48px', height: '44px', objectFit: 'contain', flexShrink: 0 }} />
+              <div style={{ overflow: 'hidden', flex: 1 }}>
+                <div style={S.logoText}>Big Academy</div>
+                <div style={S.logoSub}>LMS Portal</div>
+              </div>
+            </>
+          ) : null}
           <button style={S.toggleBtn} onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
