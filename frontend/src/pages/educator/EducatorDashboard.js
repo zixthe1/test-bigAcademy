@@ -1,41 +1,40 @@
+import logo from '../../BigChildcare-Logo.png';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import BrowseCourses from './AssignedCourses';
 import MyLearning from './MyLearning';
 import MyCertificates from './MyCertificates';
 import API from '../../api/axios';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import NotificationBell from '../../components/NotificationBell';
 import {
-  LayoutDashboard, BookOpen, GraduationCap, Award,
-  LogOut, ChevronLeft, ChevronRight, BookMarked,
-  PlayCircle, CheckCircle,
+  LayoutDashboard,
+  BookOpen,
+  GraduationCap,
+  Award,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  BookMarked,
+  PlayCircle,
+  CheckCircle,
 } from 'lucide-react';
 
 const SIDEBAR_ITEMS = [
-  { key: 'dashboard',    path: '/educator/dashboard',    icon: LayoutDashboard, label: 'Dashboard'        },
-  { key: 'courses',      path: '/educator/courses',      icon: BookOpen,        label: 'Assigned Courses' },
-  { key: 'learning',     path: '/educator/learning',     icon: GraduationCap,   label: 'My Learning'      },
-  { key: 'certificates', path: '/educator/certificates', icon: Award,           label: 'Certificates'     },
+  { key: 'home',         icon: LayoutDashboard, label: 'Dashboard'       },
+  { key: 'browse',       icon: BookOpen,        label: 'Assigned Courses' },
+  { key: 'learning',     icon: GraduationCap,   label: 'My Learning'     },
+  { key: 'certificates', icon: Award,           label: 'Certificates'    },
 ];
 
 export default function EducatorDashboard() {
-  const { user, logout }          = useAuth();
+  const { user, logout } = useAuth();
+  const [activeTab, setActiveTab]     = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [stats, setStats]         = useState({ total: 0, active: 0, completed: 0, certificates: 0 });
-  const navigate  = useNavigate();
-  const location  = useLocation();
-
-  // Derive active tab from URL
-  const activeItem = SIDEBAR_ITEMS.find(i => location.pathname.startsWith(i.path))
-    || SIDEBAR_ITEMS[0];
-
-  // Redirect /educator to /educator/dashboard
-  useEffect(() => {
-    if (location.pathname === '/educator' || location.pathname === '/educator/') {
-      navigate('/educator/dashboard', { replace: true });
-    }
-  }, [location.pathname]);
+  const [stats, setStats]             = useState({
+    total: 0, active: 0, completed: 0, certificates: 0
+  });
+  const navigate = useNavigate();
 
   useEffect(() => {
     API.get('/my-learning/').then(res => {
@@ -67,7 +66,7 @@ export default function EducatorDashboard() {
     sidebar: {
       width: sidebarOpen ? '240px' : '68px',
       minHeight: '100vh',
-      background: 'linear-gradient(180deg, #0a0d4a 0%, #1a1f8c 60%, #2563eb 100%)',
+      background: 'linear-gradient(180deg, #29abe2 0%, #0891b2 100%)',
       display: 'flex',
       flexDirection: 'column',
       transition: 'width 0.25s ease',
@@ -101,6 +100,7 @@ export default function EducatorDashboard() {
       fontWeight: '700',
       fontSize: '0.95rem',
       whiteSpace: 'nowrap',
+      overflow: 'hidden',
       lineHeight: 1.2,
     },
     logoSub: {
@@ -120,7 +120,10 @@ export default function EducatorDashboard() {
       display: 'flex',
       alignItems: 'center',
     },
-    navSection: { padding: '20px 0 8px', flex: 1 },
+    navSection: {
+      padding: '20px 0 8px',
+      flex: 1,
+    },
     navSectionLabel: {
       padding: '0 18px 8px',
       color: 'rgba(255,255,255,0.35)',
@@ -143,7 +146,10 @@ export default function EducatorDashboard() {
       overflow: 'hidden',
       userSelect: 'none',
     }),
-    navText: { fontSize: '0.875rem', fontWeight: '500' },
+    navText: {
+      fontSize: '0.875rem',
+      fontWeight: '500',
+    },
     sidebarFooter: {
       padding: '16px',
       borderTop: '1px solid rgba(255,255,255,0.1)',
@@ -177,7 +183,10 @@ export default function EducatorDashboard() {
       overflow: 'hidden',
       textOverflow: 'ellipsis',
     },
-    userRole: { color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' },
+    userRole: {
+      color: 'rgba(255,255,255,0.5)',
+      fontSize: '0.72rem',
+    },
     logoutBtn: {
       width: '100%',
       padding: '8px 12px',
@@ -193,11 +202,17 @@ export default function EducatorDashboard() {
       whiteSpace: 'nowrap',
       overflow: 'hidden',
     },
-    main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#eef1ff' },
+    main: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      minWidth: 0,
+      background: '#ecfeff',
+    },
     topbar: {
       height: '64px',
       background: '#fff',
-      borderBottom: '1px solid #e2e8f0',
+      borderBottom: '1px solid #a5f3fc',
       display: 'flex',
       alignItems: 'center',
       padding: '0 28px',
@@ -215,16 +230,30 @@ export default function EducatorDashboard() {
     },
     locationBadge: {
       fontSize: '0.8rem',
-      color: '#2563eb',
+      color: '#0891b2',
       fontWeight: '600',
-      background: '#eff6ff',
+      background: '#ecfeff',
       padding: '4px 12px',
       borderRadius: '20px',
-      border: '1px solid #bfdbfe',
+      border: '1px solid #a5f3fc',
     },
-    content: { flex: 1, padding: '28px', overflowY: 'auto' },
-    greetingTitle:    { fontSize: '1.4rem', fontWeight: '700', color: '#0f172a', marginBottom: '4px' },
-    greetingSubtitle: { fontSize: '0.875rem', color: '#64748b', marginBottom: '24px' },
+    content: {
+      flex: 1,
+      padding: '28px',
+      overflowY: 'auto',
+      background: '#ecfeff',
+    },
+    greetingTitle: {
+      fontSize: '1.4rem',
+      fontWeight: '700',
+      color: '#0f172a',
+      marginBottom: '4px',
+    },
+    greetingSubtitle: {
+      fontSize: '0.875rem',
+      color: '#64748b',
+      marginBottom: '24px',
+    },
     statsGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -238,30 +267,75 @@ export default function EducatorDashboard() {
       boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       borderTop: `3px solid ${accent}`,
     }),
-    statNumber: { fontSize: '2rem', fontWeight: '800', color: '#0f172a', lineHeight: 1, marginBottom: '6px' },
-    statLabel:  { fontSize: '0.72rem', color: '#94a3b8', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase' },
-    sectionLabel: { fontSize: '0.75rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' },
-    quickLinksGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' },
+    statNumber: {
+      fontSize: '2rem',
+      fontWeight: '800',
+      color: '#0f172a',
+      lineHeight: 1,
+      marginBottom: '6px',
+    },
+    statLabel: {
+      fontSize: '0.72rem',
+      color: '#94a3b8',
+      fontWeight: '600',
+      letterSpacing: '0.08em',
+      textTransform: 'uppercase',
+    },
+    sectionLabel: {
+      fontSize: '0.75rem',
+      fontWeight: '700',
+      color: '#94a3b8',
+      letterSpacing: '0.08em',
+      textTransform: 'uppercase',
+      marginBottom: '12px',
+    },
+    quickLinksGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+      gap: '12px',
+    },
     quickLink: {
-      background: '#fff', borderRadius: '10px', padding: '16px 20px',
-      display: 'flex', alignItems: 'center', gap: '14px',
-      cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      border: '1px solid #e2e8f0', transition: 'box-shadow 0.15s',
+      background: '#fff',
+      borderRadius: '10px',
+      padding: '16px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      cursor: 'pointer',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+      border: '1px solid #e2e8f0',
+      transition: 'box-shadow 0.15s',
     },
     quickLinkIconBox: (bg) => ({
-      width: '40px', height: '40px', borderRadius: '10px', background: bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      width: '40px',
+      height: '40px',
+      borderRadius: '10px',
+      background: bg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
     }),
-    quickLinkTitle: { fontSize: '0.9rem', fontWeight: '600', color: '#1e293b', marginBottom: '2px' },
-    quickLinkSub:   { fontSize: '0.75rem', color: '#94a3b8' },
+    quickLinkTitle: {
+      fontSize: '0.9rem',
+      fontWeight: '600',
+      color: '#1e293b',
+      marginBottom: '2px',
+    },
+    quickLinkSub: {
+      fontSize: '0.75rem',
+      color: '#94a3b8',
+    },
   };
 
+  const activeItem = SIDEBAR_ITEMS.find(i => i.key === activeTab);
   const ActiveIcon = activeItem?.icon;
 
   const HomeDashboard = () => (
     <div>
       <div style={S.greetingTitle}>Welcome back, {user.first_name}! 👋</div>
       <div style={S.greetingSubtitle}>Here's your learning overview</div>
+
       <div style={S.statsGrid}>
         {[
           { label: 'Total Enrolled', value: stats.total,        Icon: BookMarked,  accent: '#2563eb', iconColor: '#2563eb', iconBg: '#eff6ff' },
@@ -278,14 +352,15 @@ export default function EducatorDashboard() {
           </div>
         ))}
       </div>
+
       <div style={S.sectionLabel}>Quick Links</div>
       <div style={S.quickLinksGrid}>
         {[
-          { Icon: BookOpen,      bg: '#eff6ff', color: '#2563eb', label: 'Assigned Courses', sub: 'View & enrol in courses',     path: '/educator/courses'      },
-          { Icon: GraduationCap, bg: '#fefce8', color: '#d97706', label: 'My Learning',       sub: 'Continue where you left off', path: '/educator/learning'     },
-          { Icon: Award,         bg: '#f5f3ff', color: '#7c3aed', label: 'Certificates',      sub: 'Download your certificates',  path: '/educator/certificates' },
+          { Icon: BookOpen,      bg: '#eff6ff', color: '#2563eb', label: 'Assigned Courses', sub: 'View & enrol in courses',     tab: 'browse'       },
+          { Icon: GraduationCap, bg: '#fefce8', color: '#d97706', label: 'My Learning',       sub: 'Continue where you left off', tab: 'learning'     },
+          { Icon: Award,         bg: '#f5f3ff', color: '#7c3aed', label: 'Certificates',      sub: 'Download your certificates',  tab: 'certificates' },
         ].map(link => (
-          <div key={link.path} style={S.quickLink} onClick={() => navigate(link.path)}>
+          <div key={link.tab} style={S.quickLink} onClick={() => setActiveTab(link.tab)}>
             <div style={S.quickLinkIconBox(link.bg)}>
               <link.Icon size={18} color={link.color} />
             </div>
@@ -304,7 +379,7 @@ export default function EducatorDashboard() {
       {/* Sidebar */}
       <div style={S.sidebar}>
         <div style={S.sidebarHeader}>
-          <div style={S.logoBox}>BA</div>
+          <img src={logo} alt="Big Childcare" style={{ width: '48px', height: '44px', objectFit: 'contain' }} />
           {sidebarOpen && (
             <div style={{ overflow: 'hidden' }}>
               <div style={S.logoText}>Big Academy</div>
@@ -318,11 +393,11 @@ export default function EducatorDashboard() {
 
         <div style={S.navSection}>
           {sidebarOpen && <div style={S.navSectionLabel}>Navigation</div>}
-          {SIDEBAR_ITEMS.map(({ key, path, icon: Icon, label }) => (
+          {SIDEBAR_ITEMS.map(({ key, icon: Icon, label }) => (
             <div
               key={key}
-              style={S.navItem(location.pathname.startsWith(path))}
-              onClick={() => navigate(path)}
+              style={S.navItem(activeTab === key)}
+              onClick={() => setActiveTab(key)}
             >
               <Icon size={18} style={{ flexShrink: 0 }} />
               {sidebarOpen && <span style={S.navText}>{label}</span>}
@@ -353,17 +428,20 @@ export default function EducatorDashboard() {
       <div style={S.main}>
         <div style={S.topbar}>
           <div style={S.pageTitle}>
-            {ActiveIcon && <ActiveIcon size={18} color="#2563eb" />}
+            {ActiveIcon && <ActiveIcon size={18} color="#0891b2" />}
             {activeItem?.label}
           </div>
           <NotificationBell />
-          {user.location && <span style={S.locationBadge}>{user.location}</span>}
+          {user.location && (
+            <span style={S.locationBadge}>{user.location}</span>
+          )}
         </div>
+
         <div style={S.content}>
-          {activeItem?.key === 'dashboard'    && <HomeDashboard />}
-          {activeItem?.key === 'courses'      && <BrowseCourses />}
-          {activeItem?.key === 'learning'     && <MyLearning />}
-          {activeItem?.key === 'certificates' && <MyCertificates />}
+          {activeTab === 'home'         && <HomeDashboard />}
+          {activeTab === 'browse'       && <BrowseCourses />}
+          {activeTab === 'learning'     && <MyLearning />}
+          {activeTab === 'certificates' && <MyCertificates />}
         </div>
       </div>
     </div>

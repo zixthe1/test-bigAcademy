@@ -62,7 +62,7 @@ export default function MyCertificates() {
       width: '44px',
       height: '44px',
       borderRadius: '10px',
-      background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+      background: 'linear-gradient(135deg, #29abe2, #0891b2)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -127,7 +127,7 @@ export default function MyCertificates() {
     downloadBtn: (isLoading) => ({
       width: '100%',
       padding: '9px',
-      background: isLoading ? '#f1f5f9' : '#4f46e5',
+      background: isLoading ? '#f1f5f9' : '#0891b2',
       color: isLoading ? '#94a3b8' : '#fff',
       border: 'none',
       borderRadius: '8px',
