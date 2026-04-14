@@ -1,3 +1,5 @@
+import HRCourses from './HRCourses';
+import HRAssignments from './HRAssignments';
 import logo from '../../BigChildcare-Logo.png';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -9,15 +11,17 @@ import HRReports from './HRReports';
 import NotificationBell from '../../components/NotificationBell';
 import {
   LayoutDashboard, Users, Unlock, BarChart2,
-  LogOut, ChevronLeft, ChevronRight,
+  BookOpen, ClipboardList, LogOut, ChevronLeft, ChevronRight,
   UserCheck, ShieldCheck, TrendingUp,
 } from 'lucide-react';
 
 const SIDEBAR_ITEMS = [
   { key: 'dashboard', path: '/hr/dashboard', icon: LayoutDashboard, label: 'Dashboard'       },
-  { key: 'users',     path: '/hr/users',     icon: Users,           label: 'Users'            },
-  { key: 'requests',  path: '/hr/requests',  icon: Unlock,          label: 'Unlock Requests'  },
-  { key: 'reports',   path: '/hr/reports',   icon: BarChart2,       label: 'Reports'          },
+  { key: 'courses',   path: '/hr/courses',   icon: BookOpen,        label: 'Courses'         },
+  { key: 'assignments', path: '/hr/assignments', icon: ClipboardList, label: 'Assignments'   },
+  { key: 'users',     path: '/hr/users',     icon: Users,           label: 'Users'           },
+  { key: 'requests',  path: '/hr/requests',  icon: Unlock,          label: 'Unlock Requests' },
+  { key: 'reports',   path: '/hr/reports',   icon: BarChart2,       label: 'Reports'         },
 ];
 
 export default function HRDashboard() {
@@ -389,10 +393,12 @@ export default function HRDashboard() {
         </div>
 
         <div style={S.content}>
-          {activeItem?.key === 'dashboard' && <HomeDashboard />}
-          {activeItem?.key === 'users'     && <HRManageUsers isExecutive={isExecutive} />}
-          {activeItem?.key === 'requests'  && <HRUnlockRequests />}
-          {activeItem?.key === 'reports'   && <HRReports />}
+          {activeItem?.key === 'dashboard'    && <HomeDashboard />}
+          {activeItem?.key === 'courses'     && <HRCourses />}
+          {activeItem?.key === 'assignments' && <HRAssignments />}
+          {activeItem?.key === 'users'        && <HRManageUsers isExecutive={isExecutive} />}
+          {activeItem?.key === 'requests'     && <HRUnlockRequests />}
+          {activeItem?.key === 'reports'      && <HRReports />}
         </div>
       </div>
     </div>
