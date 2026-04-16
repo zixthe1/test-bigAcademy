@@ -476,6 +476,14 @@ export default function CourseViewer({ enrolment, onBack }) {
                       <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Pass mark: {quiz.pass_mark_percent}%</div>
                     </div>
                     {renderQuizStatusBadge(quiz)}
+                    {quizUnlocked && !quizStatusLoading && (
+                      <div style={{
+                        padding: '6px 14px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: '600',
+                        background: '#0891b2', color: '#fff', flexShrink: 0,
+                      }}>
+                       {quizStatuses[quiz.id]?.last_result?.passed ? 'Review' : 'Take Quiz'}
+                      </div>
+                    )}
                     {!quizUnlocked && <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Complete all lessons to unlock</span>}
                   </div>
                 ))}

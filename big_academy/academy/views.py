@@ -1141,17 +1141,31 @@ def request_quiz_unlock(request, quiz_id):
     if not reason:
         return Response({'error': 'Please provide a reason for your unlock request.'}, status=400)
 
+    
     unlock_request = QuizUnlockRequests.objects.create(
-        user   = academy_user,
-        quiz   = quiz,
-        reason = reason,
-        status = 'pending'
+    user   = academy_user,
+    quiz   = quiz,
+    reason = reason,
+    status = 'pending'
     )
 
+    # Notify all area managers and HR about the new unlock request
+    managers = Users.objects.filter(
+      role__in=['area_manager', 'hr'],
+      status='active'
+    )
+    for manager in managers:
+        create_notification(
+           recipient  = manager,
+           notif_type = 'general',
+           title      = 'New Unlock Request',
+           message    = f'{academy_user.first_name} {academy_user.last_name} has requested a quiz unlock for "{quiz.title}".'
+        )
+
     return Response({
-        'message':    'Unlock request submitted successfully.',
-        'request_id': unlock_request.id,
-        'status':     'pending'
+       'message':    'Unlock request submitted successfully.',
+       'request_id': unlock_request.id,
+       'status':     'pending'
     }, status=201)
 
 

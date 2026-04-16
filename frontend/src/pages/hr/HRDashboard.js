@@ -56,6 +56,9 @@ export default function HRDashboard() {
     API.get('/unlock-requests/').then(res => {
       setStats(prev => ({ ...prev, pending_unlocks: res.data.length }));
     }).catch(() => {});
+    API.get('/attempts/pending-grading/').then(res => {
+      setStats(prev => ({ ...prev, pending_grading: res.data.length }));
+    }).catch(() => {});
   }, []);
 
   const handleLogout = async () => {
@@ -349,13 +352,19 @@ export default function HRDashboard() {
         <div style={S.navSection}>
           {sidebarOpen && <div style={S.navSectionLabel}>Navigation</div>}
           {SIDEBAR_ITEMS.map(({ key, path, icon: Icon, label }) => (
-            <div
-              key={key}
-              style={S.navItem(location.pathname.startsWith(path))}
-              onClick={() => navigate(path)}
-            >
+            <div key={key} style={S.navItem(location.pathname.startsWith(path))} onClick={() => navigate(path)}>
               <Icon size={18} style={{ flexShrink: 0 }} />
               {sidebarOpen && <span style={S.navText}>{label}</span>}
+              {sidebarOpen && key === 'requests' && stats.pending_unlocks > 0 && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: '700', padding: '2px 6px', borderRadius: '10px', background: '#ef4444', color: '#fff', minWidth: '18px', textAlign: 'center' }}>
+                  {stats.pending_unlocks}
+                </span>
+              )}
+              {sidebarOpen && key === 'grading' && stats.pending_grading > 0 && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: '700', padding: '2px 6px', borderRadius: '10px', background: '#f59e0b', color: '#fff', minWidth: '18px', textAlign: 'center' }}>
+                  {stats.pending_grading}
+                </span>
+              )}
             </div>
           ))}
         </div>

@@ -241,6 +241,16 @@ export default function AreaManagerDashboard() {
             <div key={key} style={S.navItem(location.pathname.startsWith(path))} onClick={() => navigate(path)}>
               <Icon size={18} style={{ flexShrink: 0 }} />
               {sidebarOpen && <span style={S.navText}>{label}</span>}
+              {sidebarOpen && key === 'requests' && stats.pending_unlocks > 0 && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: '700', padding: '2px 6px', borderRadius: '10px', background: '#ef4444', color: '#fff', minWidth: '18px', textAlign: 'center' }}>
+                  {stats.pending_unlocks}
+                </span>
+              )}
+              {sidebarOpen && key === 'grading' && stats.pending_grading > 0 && (
+                <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: '700', padding: '2px 6px', borderRadius: '10px', background: '#f59e0b', color: '#fff', minWidth: '18px', textAlign: 'center' }}>
+                 {stats.pending_grading}
+                </span>
+              )}
             </div>
           ))}
         </div>
