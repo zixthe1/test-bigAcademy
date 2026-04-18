@@ -1149,11 +1149,23 @@ def request_quiz_unlock(request, quiz_id):
     status = 'pending'
     )
 
-    # Notify all area managers and HR about the new unlock request
-    managers = Users.objects.filter(
-      role__in=['area_manager', 'hr'],
-      status='active'
-    )
+    # Notify managers based on hierarchy and location
+    requesting_role = academy_user.role
+    if requesting_role in ['branch_manager', 'educator']:
+       # Only notify area managers assigned to this user's location
+        assigned_managers = SuperAdminLocations.objects.filter(
+           location=academy_user.location
+        ).values_list('user_id', flat=True)
+        managers = Users.objects.filter(
+            id__in=assigned_managers,
+            role='area_manager',
+            status='active'
+        )
+    elif requesting_role == 'area_manager':
+        managers = Users.objects.filter(role='hr', status='active')
+    else:
+        managers = Users.objects.none()
+
     for manager in managers:
         create_notification(
            recipient  = manager,
@@ -1183,6 +1195,13 @@ def review_unlock_request(request, request_id):
         return Response({'error': 'Access denied.'}, status=403)
 
     unlock_request = get_object_or_404(QuizUnlockRequests, id=request_id)
+
+    # Check hierarchy — who can unlock for whom
+    target_user_role = unlock_request.user.role
+    if academy_user.role == 'area_manager' and target_user_role not in ['branch_manager', 'educator']:
+        return Response({'error': 'Area Managers can only unlock requests for Branch Managers and Educators.'}, status=403)
+    if academy_user.role == 'hr' and target_user_role != 'area_manager':
+        return Response({'error': 'HR can only unlock requests for Area Managers.'}, status=403)
 
     if unlock_request.status != 'pending':
         return Response({'error': 'This request has already been reviewed.'}, status=400)
@@ -1233,11 +1252,24 @@ def list_unlock_requests(request):
 
     requests = QuizUnlockRequests.objects.filter(status='pending').order_by('-requested_at')
 
+    # Filter based on hierarchy and location
+    if academy_user.role == 'area_manager':
+        assigned_location_ids = SuperAdminLocations.objects.filter(
+            user=academy_user
+        ).values_list('location_id', flat=True)
+        requests = requests.filter(
+            user__role__in=['branch_manager', 'educator'],
+            user__location_id__in=assigned_location_ids
+        )
+    elif academy_user.role == 'hr':
+        requests = requests.filter(user__role='area_manager')
+
     data = []
     for req in requests:
         data.append({
             'id':           req.id,
             'user_name':    f"{req.user.first_name} {req.user.last_name}",
+            'user_role':    req.user.role,
             'quiz_title':   req.quiz.title,
             'reason':       req.reason,
             'requested_at': req.requested_at,
