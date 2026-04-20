@@ -144,7 +144,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 # It tells Django to put static files in a folder named 'staticfiles' in your main project directory.
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
+# Extra places to look for files (like your React build)
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), 
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
