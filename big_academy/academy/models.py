@@ -13,7 +13,7 @@ class Locations(models.Model):
         return f"{self.name} ({self.state})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'locations'
         verbose_name = 'Location'
         verbose_name_plural = 'Locations'
@@ -52,7 +52,7 @@ class Users(models.Model):
         return f"{self.first_name} {self.last_name} ({self.role})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'users'
         verbose_name = 'User'
         verbose_name_plural = 'Users'
@@ -95,7 +95,7 @@ class Courses(models.Model):
         return f"{self.title} (v{self.version}) — {self.status}"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'courses'
         verbose_name = 'Course'
         verbose_name_plural = 'Courses'
@@ -112,7 +112,7 @@ class CourseModules(models.Model):
         return f"{self.title} (Course: {self.course})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'course_modules'
         verbose_name = 'Course Module'
         verbose_name_plural = 'Course Modules'
@@ -133,7 +133,7 @@ class Lessons(models.Model):
         return f"{self.title} ({self.content_type})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'lessons'
         verbose_name = 'Lesson'
         verbose_name_plural = 'Lessons'
@@ -153,7 +153,7 @@ class Assignments(models.Model):
         return f"{self.course} — {self.assignment_type} (mandatory: {self.mandatory})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'assignments'
         verbose_name = 'Assignment'
         verbose_name_plural = 'Assignments'
@@ -173,7 +173,7 @@ class Enrolments(models.Model):
         return f"{self.user} → {self.course} ({self.status})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'enrolments'
         verbose_name = 'Enrolment'
         verbose_name_plural = 'Enrolments'
@@ -194,7 +194,7 @@ class LessonProgress(models.Model):
         return f"{self.user} — {self.lesson} ({self.progress_percent}%)"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'lesson_progress'
         verbose_name = 'Lesson Progress'
         verbose_name_plural = 'Lesson Progress'
@@ -214,7 +214,7 @@ class Quizzes(models.Model):
         return f"{self.title} (pass mark: {self.pass_mark_percent}%)"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'quizzes'
         verbose_name = 'Quiz'
         verbose_name_plural = 'Quizzes'
@@ -232,7 +232,7 @@ class QuizQuestions(models.Model):
         return f"Q{self.sort_order}: {self.question_text[:60]}"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'quiz_questions'
         verbose_name = 'Quiz Question'
         verbose_name_plural = 'Quiz Questions'
@@ -249,7 +249,7 @@ class QuizOptions(models.Model):
         return f"{correct} {self.option_text[:60]}"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'quiz_options'
         verbose_name = 'Quiz Option'
         verbose_name_plural = 'Quiz Options'
@@ -284,7 +284,7 @@ class QuizAttempts(models.Model):
         return f"{self.user} — {self.quiz} — {result} ({self.score_percent}%)"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'quiz_attempts'
         verbose_name = 'Quiz Attempt'
         verbose_name_plural = 'Quiz Attempts'
@@ -302,7 +302,7 @@ class QuizAnswers(models.Model):
         return f"Attempt {self.attempt_id} — Q{self.question_id} — {correct}"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'quiz_answers'
         verbose_name = 'Quiz Answer'
         verbose_name_plural = 'Quiz Answers'
@@ -322,7 +322,7 @@ class Certificates(models.Model):
         return f"{self.user} — {self.course} (issued: {self.issued_at.strftime('%d %b %Y')})"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'certificates'
         verbose_name = 'Certificate'
         verbose_name_plural = 'Certificates'
@@ -352,7 +352,7 @@ class QuizUnlockRequests(models.Model):
         return f"{self.user} — {self.quiz} — {self.status}"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'quiz_unlock_requests'
         verbose_name = 'Quiz Unlock Request'
         verbose_name_plural = 'Quiz Unlock Requests'
