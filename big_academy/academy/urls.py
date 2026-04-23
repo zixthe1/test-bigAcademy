@@ -79,4 +79,11 @@ urlpatterns = [
     path('reports/completion/', views.report_completion, name='report-completion'),
     path('reports/staff/',      views.report_staff,      name='report-staff'),
 
+# STEP-BY-STEP QUIZ (VicRoads style)
+    path('step-quiz/<int:quiz_id>/start/', views.start_step_quiz, name='start-step-quiz'),
+    path('step-quiz/<int:attempt_id>/state/', views.get_step_quiz_state, name='step-quiz-state'),
+    path('step-quiz/<int:attempt_id>/sections/<int:module_id>/video/', views.step_mark_video_watched, name='step-video-watched'),
+    path('step-quiz/<int:attempt_id>/sections/<int:module_id>/questions/', views.step_get_questions, name='step-questions'),
+    path('step-quiz/<int:attempt_id>/sections/<int:module_id>/submit/', views.step_submit_section, name='step-submit-section'),
+
 ]

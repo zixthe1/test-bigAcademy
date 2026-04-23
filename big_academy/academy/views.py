@@ -2,6 +2,7 @@ import datetime
 import random
 
 import bcrypt
+from .models import SectionProgress
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +12,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User as DjangoUser
 from .models import QuizAttempts, QuizAnswers, QuizUnlockRequests, Notifications, SuperAdminLocations
+from .models import SectionProgress
 from .models import (
     Users, Enrolments, Courses, Assignments,
     CourseModules, Lessons, Quizzes,
@@ -33,7 +35,7 @@ from .serializers import (
 # ============================================================
 # ROLE CONSTANTS
 # ============================================================
-HR_ROLES         = ['hr']                                               # HR only
+HR_ROLES         = ['hr', 'executive_hr']                                               # HR only
 MANAGEMENT_ROLES = ['hr', 'area_manager', 'branch_manager']            # All management
 CONTENT_ROLES    = ['hr', 'area_manager']                              # Can CRUD courses/modules
 UNLOCK_ROLES     = ['hr', 'area_manager', 'branch_manager']            # Can review unlock requests
@@ -1944,3 +1946,392 @@ def quiz_attempt_status(request, quiz_id):
         'last_result':   last_result,
         'attempts_left': max(0, (quiz.attempt_limit or 0) - attempt_count),
     }, status=200)
+
+"""
+Big Academy - Step-by-Step Assessment Views
+Add these to the BOTTOM of academy/views.py
+
+These endpoints implement the VicRoads-style section-by-section quiz flow:
+1. User starts a step-by-step quiz attempt
+2. Must watch video for current section (cannot skip)
+3. Answer all questions for that section
+4. Must get ALL correct to unlock next section
+5. If any wrong: "3 out of 4 correct, please try again"
+6. After all sections passed: quiz is complete
+"""
+
+# ============================================================
+# STEP-BY-STEP QUIZ — Start Attempt
+# ============================================================
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_step_quiz(request, quiz_id):
+    """Start a step-by-step quiz. Creates section progress for each module."""
+    academy_user = get_academy_user(request)
+    if not academy_user:
+        return Response({'error': 'User not found.'}, status=403)
+
+    quiz = get_object_or_404(Quizzes, id=quiz_id)
+
+    if not quiz.step_by_step:
+        return Response({'error': 'This quiz is not step-by-step mode.'}, status=400)
+
+    # Check for existing in-progress attempt
+    existing = QuizAttempts.objects.filter(
+        user=academy_user, quiz=quiz, submitted_at__isnull=True
+    ).first()
+    if existing:
+        return _build_step_response(existing)
+
+    # Check attempt limit
+    attempt_count = QuizAttempts.objects.filter(
+        user=academy_user, quiz=quiz, submitted_at__isnull=False
+    ).count()
+    if quiz.attempt_limit and attempt_count >= quiz.attempt_limit:
+        if not QuizAttempts.objects.filter(user=academy_user, quiz=quiz, passed=True).exists():
+            return Response({'error': 'Quiz is locked. Maximum attempts reached.'}, status=403)
+
+    # Create new attempt
+    attempt = QuizAttempts.objects.create(
+        user=academy_user,
+        quiz=quiz,
+        passed=False,
+        started_at=timezone.now(),
+        created_at=timezone.now(),
+        current_section_order=1,
+    )
+
+    # Get all modules for this course, ordered by sort_order
+    modules = CourseModules.objects.filter(course=quiz.course).order_by('sort_order')
+
+    for i, module in enumerate(modules):
+        SectionProgress.objects.create(
+            attempt=attempt,
+            module=module,
+            status='watch_video' if i == 0 else 'locked',
+        )
+
+    return _build_step_response(attempt)
+
+
+# ============================================================
+# STEP-BY-STEP QUIZ — Get Current State
+# ============================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_step_quiz_state(request, attempt_id):
+    """Get the current state of a step-by-step quiz attempt."""
+    academy_user = get_academy_user(request)
+    if not academy_user:
+        return Response({'error': 'User not found.'}, status=403)
+
+    attempt = get_object_or_404(QuizAttempts, id=attempt_id, user=academy_user)
+    return _build_step_response(attempt)
+
+
+# ============================================================
+# STEP-BY-STEP QUIZ — Mark Video Watched
+# ============================================================
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def step_mark_video_watched(request, attempt_id, module_id):
+    """Mark a section video as watched, unlocking that section questions."""
+    academy_user = get_academy_user(request)
+    if not academy_user:
+        return Response({'error': 'User not found.'}, status=403)
+
+    attempt = get_object_or_404(QuizAttempts, id=attempt_id, user=academy_user)
+
+    if attempt.submitted_at:
+        return Response({'error': 'This attempt is already submitted.'}, status=400)
+
+    try:
+        section = SectionProgress.objects.get(attempt=attempt, module_id=module_id)
+    except SectionProgress.DoesNotExist:
+        return Response({'error': 'Section not found.'}, status=404)
+
+    if section.status not in ('watch_video', 'failed'):
+        return Response({'error': f'Cannot watch video in status: {section.status}'}, status=400)
+
+    section.video_watched = True
+    section.status = 'answer_questions'
+    section.save()
+
+    return _build_step_response(attempt)
+
+
+# ============================================================
+# STEP-BY-STEP QUIZ — Get Section Questions
+# ============================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def step_get_questions(request, attempt_id, module_id):
+    """Get questions for a specific section (only if video watched)."""
+    academy_user = get_academy_user(request)
+    if not academy_user:
+        return Response({'error': 'User not found.'}, status=403)
+
+    attempt = get_object_or_404(QuizAttempts, id=attempt_id, user=academy_user)
+
+    try:
+        section = SectionProgress.objects.get(attempt=attempt, module_id=module_id)
+    except SectionProgress.DoesNotExist:
+        return Response({'error': 'Section not found.'}, status=404)
+
+    if section.status == 'locked':
+        return Response({'error': 'This section is locked. Complete previous sections first.'}, status=403)
+
+    if section.status == 'watch_video':
+        return Response({'error': 'You must watch the video before answering questions.'}, status=403)
+
+    questions = QuizQuestions.objects.filter(
+        quiz=attempt.quiz, module_id=module_id
+    ).order_by('sort_order')
+
+    questions_data = []
+    for q in questions:
+        q_data = {
+            'id': q.id,
+            'question_text': q.question_text,
+            'question_type': q.question_type,
+            'sort_order': q.sort_order,
+        }
+        if q.question_type in ('mcq', 'truefalse'):
+            options = list(QuizOptions.objects.filter(question=q).values('id', 'option_text', 'sort_order'))
+            random.shuffle(options)
+            q_data['options'] = options
+        else:
+            q_data['options'] = []
+        questions_data.append(q_data)
+
+    return Response({'questions': questions_data}, status=200)
+
+
+# ============================================================
+# STEP-BY-STEP QUIZ — Submit Section Answers
+# ============================================================
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def step_submit_section(request, attempt_id, module_id):
+    """
+    Submit answers for one section.
+    ALL must be correct to pass and unlock next section.
+    If any wrong: shows score and requires retry (re-watch video + re-answer).
+    """
+    academy_user = get_academy_user(request)
+    if not academy_user:
+        return Response({'error': 'User not found.'}, status=403)
+
+    attempt = get_object_or_404(QuizAttempts, id=attempt_id, user=academy_user)
+
+    if attempt.submitted_at:
+        return Response({'error': 'This attempt is already submitted.'}, status=400)
+
+    try:
+        section = SectionProgress.objects.get(attempt=attempt, module_id=module_id)
+    except SectionProgress.DoesNotExist:
+        return Response({'error': 'Section not found.'}, status=404)
+
+    if section.status != 'answer_questions':
+        return Response({'error': f'Cannot submit in status: {section.status}'}, status=400)
+
+    answers_data = request.data.get('answers', [])
+    questions = QuizQuestions.objects.filter(
+        quiz=attempt.quiz, module_id=module_id
+    ).order_by('sort_order')
+
+    # Delete previous answers for this section (retry case)
+    QuizAnswers.objects.filter(
+        attempt=attempt, question__module_id=module_id
+    ).delete()
+
+    correct_count = 0
+    total_count = 0
+    results = []
+
+    for q in questions:
+        total_count += 1
+        submitted = next((a for a in answers_data if a.get('question_id') == q.id), None)
+
+        option_id = submitted.get('option_id') if submitted else None
+        selected_option = None
+        is_correct = False
+
+        if option_id:
+            try:
+                selected_option = QuizOptions.objects.get(id=option_id, question=q)
+                is_correct = selected_option.is_correct
+            except QuizOptions.DoesNotExist:
+                pass
+
+        if is_correct:
+            correct_count += 1
+
+        QuizAnswers.objects.create(
+            attempt=attempt,
+            question=q,
+            selected_option=selected_option,
+            is_correct=is_correct,
+        )
+
+        # Get correct answer for feedback
+        correct_opt = QuizOptions.objects.filter(question=q, is_correct=True).first()
+
+        results.append({
+            'question_id': q.id,
+            'question_text': q.question_text,
+            'selected_option_id': option_id,
+            'correct_option_id': correct_opt.id if correct_opt else None,
+            'correct_option_text': correct_opt.option_text if correct_opt else None,
+            'is_correct': is_correct,
+        })
+
+    # Update section progress
+    section.correct_count = correct_count
+    section.total_count = total_count
+    section.attempt_count += 1
+    all_correct = correct_count == total_count
+
+    if all_correct:
+        section.status = 'passed'
+        section.save()
+
+        # Unlock next section
+        next_section = SectionProgress.objects.filter(
+            attempt=attempt,
+            module__sort_order=section.module.sort_order + 1,
+            status='locked'
+        ).first()
+
+        if next_section:
+            next_section.status = 'watch_video'
+            next_section.save()
+            attempt.current_section_order = next_section.module.sort_order
+            attempt.save()
+        else:
+            # Check if all sections are passed
+            all_passed = not SectionProgress.objects.filter(
+                attempt=attempt
+            ).exclude(status='passed').exists()
+
+            if all_passed:
+                # Calculate overall score
+                total_answers = QuizAnswers.objects.filter(attempt=attempt).count()
+                correct_answers = QuizAnswers.objects.filter(attempt=attempt, is_correct=True).count()
+                overall_score = round((correct_answers / total_answers) * 100) if total_answers > 0 else 0
+
+                attempt.score_percent = overall_score
+                attempt.passed = True
+                attempt.submitted_at = timezone.now()
+                attempt.grading_status = 'graded'
+                attempt.save()
+
+                # Auto-complete enrolment + issue certificate
+                _auto_complete_course(academy_user, attempt.quiz)
+    else:
+        # Failed — must re-watch video and retry
+        section.status = 'failed'
+        section.video_watched = False
+        section.save()
+
+    message = (
+        f"All {total_count} answers correct! Moving to the next part."
+        if all_correct
+        else f"{correct_count} out of {total_count} answers correct. Please try again to proceed to the next step."
+    )
+
+    return Response({
+        'passed': all_correct,
+        'correct_count': correct_count,
+        'total_count': total_count,
+        'attempt_number': section.attempt_count,
+        'message': message,
+        'results': results,
+        'state': _build_step_response_data(attempt),
+    }, status=200)
+
+
+# ============================================================
+# HELPERS for step-by-step flow
+# ============================================================
+def _build_step_response(attempt):
+    return Response(_build_step_response_data(attempt), status=200)
+
+
+def _build_step_response_data(attempt):
+    sections = SectionProgress.objects.filter(attempt=attempt).select_related('module')
+    total = sections.count()
+    passed = sections.filter(status='passed').count()
+    progress = round((passed / total) * 100) if total > 0 else 0
+
+    sections_data = []
+    for sp in sections:
+        sections_data.append({
+            'module_id': sp.module.id,
+            'module_title': sp.module.title,
+            'sort_order': sp.module.sort_order,
+            'status': sp.status,
+            'video_watched': sp.video_watched,
+            'video_url': sp.module.video_url or '',
+            'video_duration_seconds': sp.module.video_duration_seconds,
+            'correct_count': sp.correct_count,
+            'total_count': sp.total_count,
+            'attempt_count': sp.attempt_count,
+            'question_count': QuizQuestions.objects.filter(
+                quiz=attempt.quiz, module=sp.module
+            ).count(),
+        })
+
+    return {
+        'attempt_id': attempt.id,
+        'quiz_id': attempt.quiz.id,
+        'quiz_title': attempt.quiz.title,
+        'course_title': attempt.quiz.course.title if attempt.quiz.course else '',
+        'status': 'completed' if attempt.submitted_at else 'in_progress',
+        'passed': attempt.passed,
+        'score_percent': attempt.score_percent,
+        'progress_percentage': progress,
+        'current_section_order': attempt.current_section_order,
+        'total_sections': total,
+        'sections': sections_data,
+    }
+
+
+def _auto_complete_course(user, quiz):
+    """Auto-complete enrolment and issue certificate when quiz is passed."""
+    if not quiz.course:
+        return
+    try:
+        enrolment = Enrolments.objects.get(user=user, course=quiz.course)
+        enrolment.status = 'completed'
+        enrolment.completed_at = timezone.now()
+        enrolment.updated_at = timezone.now()
+        enrolment.save()
+
+        existing_cert = Certificates.objects.filter(
+            user=user, course=quiz.course, course_version=quiz.course.version
+        ).first()
+        if not existing_cert:
+            import uuid
+            from dateutil.relativedelta import relativedelta
+            cert_uuid = uuid.uuid4()
+            expires_at = None
+            if quiz.course.expiry_months:
+                expires_at = timezone.now() + relativedelta(months=quiz.course.expiry_months)
+            Certificates.objects.create(
+                certificate_id=cert_uuid,
+                user=user,
+                course=quiz.course,
+                course_version=quiz.course.version,
+                issued_at=timezone.now(),
+                expires_at=expires_at,
+                created_at=timezone.now(),
+            )
+            create_notification(
+                recipient=user,
+                notif_type='certificate_issued',
+                title='Certificate Issued',
+                message=f'Congratulations! Your certificate for "{quiz.course.title}" is now available.'
+            )
+    except Enrolments.DoesNotExist:
+        pass

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
 import QuizTaker from './QuizTaker';
+import StepQuizTaker from './StepQuizTaker';
 import {
   ChevronLeft, ChevronDown, ChevronUp,
   CheckCircle, Lock, PlayCircle,
@@ -275,7 +276,7 @@ export default function CourseViewer({ enrolment, onBack }) {
 
   // ── Active Quiz ──────────────────────────────────────────────────
   if (activeQuiz) return (
-    <QuizTaker quiz={activeQuiz} onBack={() => setActiveQuiz(null)} onComplete={() => { setActiveQuiz(null); setActiveLesson(null); fetchCourseData(); }} />
+activeQuiz.step_by_step ? <StepQuizTaker quiz={activeQuiz} onBack={() => setActiveQuiz(null)} onComplete={() => { setActiveQuiz(null); setActiveLesson(null); fetchCourseData(); }} /> : <QuizTaker quiz={activeQuiz} onBack={() => setActiveQuiz(null)} onComplete={() => { setActiveQuiz(null); setActiveLesson(null); fetchCourseData(); }} />
   );
 
   // ── Quiz Result View ─────────────────────────────────────────────
